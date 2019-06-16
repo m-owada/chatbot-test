@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="x-ua-compatible" content="IE=Edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <title>chatbot</title>
+    <script language="javascript" type="text/javascript">
+        window.addEventListener("load", function()
+        {
+            if(sessionStorage.getItem("name"))
+            {
+                document.querySelector("input[name='txt_name']").value = sessionStorage.getItem("name");
+                document.querySelector("input[name='txt_message']").focus();
+            }
+        });
+        function OnSubmitClick()
+        {
+            sessionStorage.setItem("name", document.querySelector("input[name='txt_name']").value);
+        }
+    </script>
+</head>
+<body>
+    <main class="bd-content px-2 py-4" role="main">
+        <div class="container">
+            <h3>chatbot</h3>
+            <hr>
+            <form action="/submit" method="post" onSubmit="OnSubmitClick();">
+                <div class="form-group">
+                    <label>あなたの名前を入力してください。</label>
+                    <input class="form-control" type="text" name="txt_name" required />
+                </div>
+                <div class="form-group">
+                    <label>メッセージを入力してください。</label>
+                    <input class="form-control" type="text" name="txt_message" required />
+                </div>
+                <div class="form-group">
+                    <input class="btn btn-primary" type="submit" value="送信" />
+                </div>
+            </form>
+            <table class="table table-striped">
+                %for item in list:
+                <tr>
+                    <td>
+                        <div><strong>{{bot}} - {{item["date"]}}</strong></div>
+                        <div>{{item["response"]}}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div><strong>{{item["name"]}} - {{item["date"]}}</strong></div>
+                        <div>{{item["message"]}}</div>
+                    </td>
+                </tr>
+                %end
+            </table>
+        </div>
+    </main>
+</body>
+</html>
