@@ -14,7 +14,7 @@ _bot_id = 1
 @route("/")
 def index():
     with get_cursor() as cur:
-        bot = get_bot(cur, _bot_id)
+        bot = get_bot_name(cur, _bot_id)
         list = get_log_list(cur, _bot_id)
     return template("index", bot=bot["bot_name"], list=list)
 
@@ -22,9 +22,9 @@ def index():
 def add():
     with get_cursor() as cur:
         bot = get_bot(cur, _bot_id)
-        chatbot = Chatbot(bot["bot_name"], bot["dictionary"])
-        response = chatbot.response(request.forms.getunicode("txt_message"))
-        upd_bot(cur, _bot_id, chatbot.name, chatbot.json)
+        chatbot = Chatbot(bot["bot_name"], bot["dictionary"], bot["sentences"])
+        response = chatbot.response(request.forms.getunicode("txt_message"), request.forms.getunicode("txt_name") == "DEBUG")
+        upd_bot(cur, _bot_id, chatbot.name, chatbot.json_dictionary, chatbot.json_sentences)
         add_log(cur, _bot_id, request.forms.getunicode("txt_name"), request.forms.getunicode("txt_message"), response)
     return redirect("/")
 
@@ -43,14 +43,19 @@ def get_cursor():
         cur.close()
         _conn_pool.putconn(conn)
 
-# BOT情報取得
+# BOT情報取得(ALL)
 def get_bot(cur, bot_id):
-    cur.execute("select bot_name, dictionary from t_bot where bot_id = %s", (bot_id,))
+    cur.execute("select bot_name, dictionary, sentences from t_bot where bot_id = %s", (bot_id,))
+    return cur.fetchone()
+
+# BOT情報取得(BOT_NAME)
+def get_bot_name(cur, bot_id):
+    cur.execute("select bot_name from t_bot where bot_id = %s", (bot_id,))
     return cur.fetchone()
 
 # BOT情報更新
-def upd_bot(cur, bot_id, bot_name, dictionary):
-    cur.execute("update t_bot set bot_name = %s, dictionary = %s, date = now() where bot_id = %s", (bot_name, dictionary, bot_id,))
+def upd_bot(cur, bot_id, bot_name, dictionary, sentences):
+    cur.execute("update t_bot set bot_name = %s, dictionary = %s, sentences = %s, date = now() where bot_id = %s", (bot_name, dictionary, sentences, bot_id,))
     return
 
 # LOG一覧取得

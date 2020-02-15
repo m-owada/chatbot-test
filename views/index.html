@@ -17,7 +17,14 @@
         });
         function OnSubmitClick()
         {
+            btn = document.querySelector("input[name='btn_submit']");
+            if(btn.disabled)
+            {
+                return false;
+            }
             sessionStorage.setItem("name", document.querySelector("input[name='txt_name']").value);
+            btn.disabled = true;
+            return true;
         }
     </script>
 </head>
@@ -26,7 +33,7 @@
         <div class="container">
             <h3>chatbot</h3>
             <hr>
-            <form action="/submit" method="post" onSubmit="OnSubmitClick();">
+            <form action="/submit" method="post" onSubmit="return OnSubmitClick();">
                 <div class="form-group">
                     <label>あなたの名前を入力してください。</label>
                     <input class="form-control" type="text" name="txt_name" required />
@@ -36,7 +43,7 @@
                     <input class="form-control" type="text" name="txt_message" required />
                 </div>
                 <div class="form-group">
-                    <input class="btn btn-primary" type="submit" value="送信" />
+                    <input class="btn btn-primary" type="submit" name="btn_submit" value="送信" />
                 </div>
             </form>
             <table class="table table-striped">

@@ -21,15 +21,15 @@ _bot_id = 1
 # 学習
 def learning(path):
     bot = read(_bot_id)
-    chatbot = Chatbot(bot["bot_name"], bot["dictionary"])
+    chatbot = Chatbot(bot["bot_name"], bot["dictionary"], bot["sentences"])
     for dirpath, dirnames, filenames in os.walk(path):
         for file in filenames:
             print(file)
             if file.endswith(".txt"):
                 with open(os.path.join(dirpath, file)) as f:
                     for line in f.readlines():
-                        response = chatbot.response(line.strip())
-    update(_bot_id, chatbot.name, chatbot.json)
+                        chatbot.analysis(line.strip())
+    update(_bot_id, chatbot.name, chatbot.json_dictionary, chatbot.json_sentences)
     print("正常に終了しました。")
     return
 
@@ -40,9 +40,9 @@ def read(bot_id):
     return bot
 
 # DB書込
-def update(bot_id, name, json):
+def update(bot_id, name, json_dictionary, json_sentences):
     with get_cursor() as cur:
-        upd_bot(cur, bot_id, name, json)
+        upd_bot(cur, bot_id, name, json_dictionary, json_sentences)
     return
 
 @contextmanager
@@ -58,12 +58,12 @@ def get_cursor():
 
 # BOT情報取得
 def get_bot(cur, bot_id):
-    cur.execute("select bot_name, dictionary from t_bot where bot_id = %s", (bot_id,))
+    cur.execute("select bot_name, dictionary, sentences from t_bot where bot_id = %s", (bot_id,))
     return cur.fetchone()
 
 # BOT情報更新
-def upd_bot(cur, bot_id, bot_name, dictionary):
-    cur.execute("update t_bot set bot_name = %s, dictionary = %s, date = now() where bot_id = %s", (bot_name, dictionary, bot_id,))
+def upd_bot(cur, bot_id, bot_name, dictionary, sentences):
+    cur.execute("update t_bot set bot_name = %s, dictionary = %s, sentences = %s, date = now() where bot_id = %s", (bot_name, dictionary, sentences, bot_id,))
     return
 
 if __name__ == "__main__":

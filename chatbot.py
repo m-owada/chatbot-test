@@ -3,25 +3,37 @@ import MeCab
 import json
 import re
 from random import choice
+from gensim.models import word2vec
 
 class Chatbot:
-    def __init__(self, name, dictionary):
+    def __init__(self, name, dictionary, sentences):
         self._name = name
         if dictionary:
             self._dictionary = json.loads(dictionary)
         else:
             self._dictionary = {}
+        if sentences:
+            self._sentences = json.loads(sentences)
+        else:
+            self._sentences = []
 
     # メッセージ返信
-    def response(self, message):
+    def response(self, message, debug=False):
         part = self.analysis(message)
-        p, res = "", ""
+        model = self.get_model()
+        p, res, log = "", "", ""
         while part and not res:
             p = choice(part)
-            res = self.chain(p)
+            for item in self.similar(model, p):
+                res = self.chain(item[0])
+                log = "Word2Vec : " + p + " > " + item[0] + " (" + str(item[1]) + ")"
+                if res:
+                    break
             part.remove(p)
         if not res:
             res = self.template(message)
+        if debug:
+            res = res + " " + log
         return res
 
     # メッセージ解析
@@ -39,6 +51,7 @@ class Chatbot:
                     part.append(node.surface)
             node = node.next
         self.add_dictionary(key1, key2, "")
+        self.add_sentences(part)
         return part
 
     # 単語追加
@@ -51,12 +64,27 @@ class Chatbot:
             self._dictionary[key1][key2].append(word)
         return
 
-    # 品詞確認
+    # キーワード確認
     def chk_keyword(self, word):
         if re.match(r"連体詞|接頭詞|名詞|動詞,自立|形容詞,自立|副詞|接続詞|感動詞|未知語", word):
             if not re.match(r"名詞,接尾|名詞,非自立", word):
                 return True
         return False
+
+    # キーワード追加
+    def add_sentences(self, part):
+        self._sentences.append(part)
+
+    # Word2Vecモデル生成
+    def get_model(self):
+        return word2vec.Word2Vec(self._sentences, size=100, min_count=1, window=3, iter=100)
+
+    # Word2Vec単語抽出
+    def similar(self, model, word):
+        if word in model.wv:
+            return model.wv.most_similar(positive=[word])
+        else:
+            return [[word, 0]]
 
     # メッセージ生成
     def chain(self, key1):
@@ -106,5 +134,13 @@ class Chatbot:
         return self._dictionary
 
     @property
-    def json(self):
+    def sentences(self):
+        return self._sentences
+
+    @property
+    def json_dictionary(self):
         return json.dumps(self._dictionary, ensure_ascii=False)
+
+    @property
+    def json_sentences(self):
+        return json.dumps(self._sentences, ensure_ascii=False)
