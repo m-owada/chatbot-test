@@ -1,4 +1,4 @@
 psycopg2==2.8.2
-bottle==0.12.16
+bottle==0.12.19
 gensim==3.7.3
 mecab-python3==0.996.2
